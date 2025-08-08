@@ -29,12 +29,15 @@ class ScoreController extends Controller
     public function store(Request $request)
     {
         // Convert MM:SS:ms ke milidetik
-        $parts = explode(':', $request->time);
+        $parts = explode(':', $request->time); // ['02', '15.123']
         $minutes = (int) $parts[0];
-        $seconds = (int) $parts[1];
-        $milliseconds = (int) $parts[2];
+
+        $secondParts = explode('.', $parts[1]); // ['15', '123']
+        $seconds = (int) $secondParts[0];
+        $milliseconds = isset($secondParts[1]) ? (int) $secondParts[1] : 0;
 
         $totalMilliseconds = ($minutes * 60 * 1000) + ($seconds * 1000) + $milliseconds;
+
 
         try {
             Score::create([

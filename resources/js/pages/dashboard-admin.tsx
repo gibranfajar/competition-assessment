@@ -11,12 +11,6 @@ export default function DashboardAdmin({ races, members, city, scores }: any) {
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
 
-        const regex = /^[0-5]?[0-9]:[0-5][0-9]:\d{1,3}$/;
-        if (!regex.test(data.time)) {
-            alert('Format waktu salah. Gunakan MM:SS:ms');
-            return;
-        }
-
         const payload = {
             ...data,
             time: convertTimeToMilliseconds(data.time),
@@ -33,14 +27,29 @@ export default function DashboardAdmin({ races, members, city, scores }: any) {
     };
 
     const handleTimeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const input = e.target.value;
-        const regex = /^[0-5]?[0-9]:[0-5][0-9]:\d{1,3}$/;
+        let input = e.target.value.replace(/\D/g, ''); // hapus semua non-digit
 
-        setData('time', input);
-
-        if (input && !regex.test(input)) {
-            console.warn('Format salah. Gunakan MM:SS:ms');
+        if (input.length > 7) {
+            input = input.slice(0, 7); // batas maksimal 7 digit
         }
+
+        let formatted = input;
+
+        if (input.length >= 3) {
+            // MM:SS.ms (02:15.123)
+            const minutes = input.slice(0, 2);
+            const seconds = input.slice(2, 4);
+            const milliseconds = input.slice(4);
+            formatted = `${minutes}:${seconds}`;
+            if (milliseconds) {
+                formatted += `.${milliseconds}`;
+            }
+        } else if (input.length >= 1 && input.length <= 2) {
+            // masih ketik menit
+            formatted = input;
+        }
+
+        setData({ ...data, time: formatted });
     };
 
     const convertTimeToMilliseconds = (timeStr: string): number => {
@@ -55,7 +64,7 @@ export default function DashboardAdmin({ races, members, city, scores }: any) {
 
         const pad = (num: number, size: number) => String(num).padStart(size, '0');
 
-        return `${pad(minutes, 2)}:${pad(seconds, 2)}:${pad(milliseconds, 3)}`;
+        return `${pad(minutes, 2)}:${pad(seconds, 2)}.${pad(milliseconds, 3)}`;
     };
 
     const groupedByMember = scores.reduce((acc, score) => {
@@ -168,7 +177,7 @@ export default function DashboardAdmin({ races, members, city, scores }: any) {
 
                 <div className="mt-4">
                     <label htmlFor="time" className="block text-sm font-medium text-gray-700">
-                        Waktu Lomba (MM:SS:ms)
+                        Waktu Lomba (MM:SS.ms)
                     </label>
                     <input
                         type="text"
@@ -176,9 +185,9 @@ export default function DashboardAdmin({ races, members, city, scores }: any) {
                         name="time"
                         value={data.time}
                         onChange={handleTimeChange}
-                        placeholder="02:15:123"
+                        placeholder="02:15.123"
                         maxLength={9}
-                        pattern="^[0-5]?[0-9]:[0-5][0-9]:\d{1,3}$"
+                        pattern="^[0-5]?[0-9]:[0-5][0-9].\d{1,3}$"
                         className="focus:ring-opacity-50 mt-1 block w-full rounded-md border border-gray-300 px-4 py-2 shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200"
                     />
                     {errors.time && <p className="text-sm text-red-500">{errors.time}</p>}

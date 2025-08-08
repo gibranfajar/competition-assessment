@@ -15,7 +15,7 @@ export default function Dashboard({ scores, races, cities }: any) {
 
         const pad = (num: number, size: number) => String(num).padStart(size, '0');
 
-        return `${pad(minutes, 2)}:${pad(seconds, 2)}:${pad(milliseconds, 3)}`;
+        return `${pad(minutes, 2)}:${pad(seconds, 2)}.${pad(milliseconds, 3)}`;
     };
 
     const grouped = scores.reduce((acc: any, score: any) => {
