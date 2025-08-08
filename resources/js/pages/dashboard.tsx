@@ -5,26 +5,18 @@ import { useMemo, useState } from 'react';
 
 const breadcrumbs: BreadcrumbItem[] = [{ title: 'Dashboard', href: '/dashboard' }];
 
-// Helper: HH:MM:SS → detik
-const parseTimeToSeconds = (value: string | number | null | undefined): number => {
-    if (!value) return 0;
-    const timeStr = String(value);
-    const parts = timeStr.split(':').map(Number);
-    if (parts.length !== 3 || parts.some(isNaN)) return 0;
-    const [hours, minutes, seconds] = parts;
-    return hours * 3600 + minutes * 60 + seconds;
-};
-
-// Helper: detik → HH:MM:SS
-const formatTime = (totalSeconds: number): string => {
-    const h = String(Math.floor(totalSeconds / 3600)).padStart(2, '0');
-    const m = String(Math.floor((totalSeconds % 3600) / 60)).padStart(2, '0');
-    const s = String(totalSeconds % 60).padStart(2, '0');
-    return `${h}:${m}:${s}`;
-};
-
 export default function Dashboard({ scores, races, cities }: any) {
     const [cityFilter, setCityFilter] = useState<string>('all');
+
+    const formatMilliseconds = (ms: number): string => {
+        const minutes = Math.floor(ms / 60000);
+        const seconds = Math.floor((ms % 60000) / 1000);
+        const milliseconds = ms % 1000;
+
+        const pad = (num: number, size: number) => String(num).padStart(size, '0');
+
+        return `${pad(minutes, 2)}:${pad(seconds, 2)}:${pad(milliseconds, 3)}`;
+    };
 
     const grouped = scores.reduce((acc: any, score: any) => {
         const memberId = score.member.id;
@@ -35,7 +27,7 @@ export default function Dashboard({ scores, races, cities }: any) {
                 area: score.member.city.name,
                 noPasukan: score.member.number_member,
                 lombaTimes: {},
-                totalSeconds: 0,
+                totalMilliseconds: 0,
                 pePoin: score.pe_point || 0,
                 acePoin: score.ace_point || 0,
                 dDayPoin: score.dday_point || 0,
@@ -43,15 +35,18 @@ export default function Dashboard({ scores, races, cities }: any) {
         }
 
         const raceCode = score.race.code;
-        acc[memberId].lombaTimes[raceCode] = score.time || '-';
-        acc[memberId].totalSeconds += parseTimeToSeconds(score.time);
+        acc[memberId].lombaTimes[raceCode] = score.time != null ? formatMilliseconds(score.time) : '-';
+
+        if (score.time != null) {
+            acc[memberId].totalMilliseconds += score.time;
+        }
 
         return acc;
     }, {});
 
     const rows = Object.values(grouped).map((item: any) => ({
         ...item,
-        totalWaktu: formatTime(item.totalSeconds),
+        totalWaktu: formatMilliseconds(item.totalMilliseconds),
         totalPoin: item.pePoin + item.acePoin + item.dDayPoin,
     }));
 
@@ -63,7 +58,7 @@ export default function Dashboard({ scores, races, cities }: any) {
     }, [cities]);
 
     const bestTimePerRace = races.map((race: any) => {
-        const filtered = scores.filter((score: any) => score.race.code === race.code && score.time);
+        const filtered = scores.filter((score: any) => score.race.code === race.code && score.time !== null);
 
         const grouped = filtered.reduce((acc: any, score: any) => {
             const memberId = score.member.id;
@@ -75,7 +70,7 @@ export default function Dashboard({ scores, races, cities }: any) {
                 };
             }
 
-            acc[memberId].time += parseTimeToSeconds(score.time);
+            acc[memberId].time += score.time;
             return acc;
         }, {});
 
@@ -88,22 +83,10 @@ export default function Dashboard({ scores, races, cities }: any) {
 
         return {
             raceName: race.name,
-            raceCode: race.code,
             member: fastest?.member,
             time: fastest?.time,
         };
     });
-
-    function formatTime(totalSeconds: number): string {
-        const hours = Math.floor(totalSeconds / 3600)
-            .toString()
-            .padStart(2, '0');
-        const minutes = Math.floor((totalSeconds % 3600) / 60)
-            .toString()
-            .padStart(2, '0');
-        const seconds = (totalSeconds % 60).toString().padStart(2, '0');
-        return `${hours}:${minutes}:${seconds}`;
-    }
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
@@ -130,7 +113,7 @@ export default function Dashboard({ scores, races, cities }: any) {
                                 No Pasukan: <span className="font-medium">{item.member?.number_member ?? '-'}</span>
                             </p>
                             <p className="text-sm text-gray-700">
-                                Total Waktu: <span className="font-medium">{item.time ? formatTime(item.time) : '-'}</span>
+                                Total Waktu: <span className="font-medium">{item.time !== undefined ? formatMilliseconds(item.time) : '-'}</span>
                             </p>
                         </div>
                     ))}
@@ -176,36 +159,36 @@ export default function Dashboard({ scores, races, cities }: any) {
                                         {/* PE, ACE, DDAY */}
                                         {(['pePoin', 'acePoin', 'dDayPoin'] as const).map((field) => (
                                             <td key={field} className="px-4 py-2">
-                                                {item[field] > 0 ? (
-                                                    <span>{item[field]}</span>
-                                                ) : (
-                                                    <form
-                                                        onSubmit={(e) => {
-                                                            e.preventDefault();
-                                                            const valueInput = e.currentTarget.elements.namedItem('value') as HTMLInputElement;
-                                                            const value = parseInt(valueInput.value);
+                                                <form
+                                                    onSubmit={(e) => {
+                                                        e.preventDefault();
+                                                        const valueInput = e.currentTarget.elements.namedItem('value') as HTMLInputElement;
+                                                        const value = parseInt(valueInput.value);
 
-                                                            router.post(route('scores.add-point'), {
-                                                                member_id: item.id,
-                                                                field,
-                                                                value: isNaN(value) ? 0 : value,
-                                                            });
-                                                        }}
+                                                        router.post(route('scores.add-point'), {
+                                                            member_id: item.id,
+                                                            field,
+                                                            value: isNaN(value) ? 0 : value,
+                                                        });
+                                                    }}
+                                                    className="flex items-center gap-1"
+                                                >
+                                                    <input
+                                                        name="value"
+                                                        type="number"
+                                                        className="w-16 rounded border border-gray-300 px-2 py-1 text-center text-sm shadow-sm focus:border-blue-400 focus:ring-1 focus:ring-blue-300 focus:outline-none"
+                                                        placeholder="0"
+                                                        defaultValue={item[field] > 0 ? item[field] : ''}
+                                                    />
+                                                    <button
+                                                        type="submit"
+                                                        className={`rounded px-2 py-1 text-xs font-semibold text-white shadow-sm ${
+                                                            item[field] > 0 ? 'bg-blue-500 hover:bg-blue-600' : 'bg-green-500 hover:bg-green-600'
+                                                        }`}
                                                     >
-                                                        <input
-                                                            name="value"
-                                                            type="number"
-                                                            className="mr-1 w-16 rounded border px-1 py-0.5"
-                                                            placeholder="0"
-                                                        />
-                                                        <button
-                                                            type="submit"
-                                                            className="rounded bg-blue-500 px-2 py-0.5 text-xs text-white hover:bg-blue-600"
-                                                        >
-                                                            Add
-                                                        </button>
-                                                    </form>
-                                                )}
+                                                        {item[field] > 0 ? 'Update' : 'Add'}
+                                                    </button>
+                                                </form>
                                             </td>
                                         ))}
 

@@ -15,7 +15,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // auth admin superadmin
     Route::get('dashboard', [AdminController::class, 'superadmin'])->name('dashboard');
     Route::resource('admins', AdminController::class);
-    Route::get('/admin/dashboard', [AdminController::class, 'dashboard'])->name('admins.dashboard');
 
     // lomba / races
     Route::resource('races', RaceController::class);
@@ -23,8 +22,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // members / anggota
     Route::resource('members', MemberController::class);
 
-    Route::resource('scores', ScoreController::class);
     Route::post('/add-point', [ScoreController::class, 'addPoint'])->name('scores.add-point');
+});
+
+Route::middleware(['auth'])->group(function () {
+    Route::get('/admin/dashboard', [AdminController::class, 'dashboard'])->name('admins.dashboard');
+    Route::post('/admin-logout', [AdminController::class, 'logout'])->name('admins.logout');
+    Route::resource('scores', ScoreController::class);
 });
 
 require __DIR__ . '/settings.php';

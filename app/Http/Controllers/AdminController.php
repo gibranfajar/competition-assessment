@@ -133,4 +133,14 @@ class AdminController extends Controller
             return redirect()->back()->with('error', $th->getMessage());
         }
     }
+
+    public function logout(Request $request)
+    {
+        $user = Auth::user();
+        $user->decrement('count_access');
+        Auth::logout();
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+        return redirect('/');
+    }
 }

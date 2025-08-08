@@ -4,12 +4,14 @@ import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
 import { Head, useForm } from '@inertiajs/react';
 import React, { useState } from 'react';
+import toast from 'react-hot-toast';
 
 const breadcrumbs: BreadcrumbItem[] = [{ title: 'Anggota', href: '/members' }];
 
 export default function Members({ members, cities }: any) {
     const [showModal, setShowModal] = useState(false);
     const [editId, setEditId] = useState<number | null>(null);
+    const [selectedCity, setSelectedCity] = useState<string>('');
 
     const {
         data,
@@ -50,6 +52,7 @@ export default function Members({ members, cities }: any) {
                     reset();
                     setShowModal(false);
                     setEditId(null);
+                    toast.success('Data anggota berhasil diubah');
                 },
             });
         } else {
@@ -57,6 +60,7 @@ export default function Members({ members, cities }: any) {
                 onSuccess: () => {
                     reset();
                     setShowModal(false);
+                    toast.success('Data anggota berhasil ditambahkan');
                 },
             });
         }
@@ -65,6 +69,7 @@ export default function Members({ members, cities }: any) {
     const handleDelete = (id: number) => {
         if (confirm('Yakin ingin menghapus data anggota ini?')) {
             destroy(route('members.destroy', id));
+            toast.success('Data anggota berhasil dihapus');
         }
     };
 
@@ -80,6 +85,21 @@ export default function Members({ members, cities }: any) {
                     </button>
                 </div>
 
+                <div className="mb-4">
+                    <label htmlFor="city" className="mr-2 font-semibold">
+                        Filter by Kota:
+                    </label>
+                    <select id="city" value={selectedCity} onChange={(e) => setSelectedCity(e.target.value)} className="rounded border px-2 py-1">
+                        <option value="">Semua Kota</option>
+                        {/* Ganti cities dengan array dari data kotamu */}
+                        {cities.map((city: any) => (
+                            <option key={city.id} value={city.name}>
+                                {city.name}
+                            </option>
+                        ))}
+                    </select>
+                </div>
+
                 {/* Table */}
                 <table className="w-full table-auto border">
                     <thead>
@@ -92,22 +112,24 @@ export default function Members({ members, cities }: any) {
                         </tr>
                     </thead>
                     <tbody>
-                        {members.map((item: any, index: number) => (
-                            <tr key={item.id}>
-                                <td className="border px-4 py-2">{index + 1}</td>
-                                <td className="border px-4 py-2">{item.city?.name ?? '-'}</td>
-                                <td className="border px-4 py-2">{item.number_member}</td>
-                                <td className="border px-4 py-2">{item.qty_member ?? '-'}</td>
-                                <td className="space-x-2 border px-4 py-2">
-                                    <button onClick={() => openModal(item)} className="rounded bg-yellow-500 px-3 py-1 text-white">
-                                        Edit
-                                    </button>
-                                    <button onClick={() => handleDelete(item.id)} className="rounded bg-red-500 px-3 py-1 text-white">
-                                        Hapus
-                                    </button>
-                                </td>
-                            </tr>
-                        ))}
+                        {members
+                            .filter((item: any) => (selectedCity ? item.city?.name === selectedCity : true))
+                            .map((item: any, index: number) => (
+                                <tr key={item.id}>
+                                    <td className="border px-4 py-2">{index + 1}</td>
+                                    <td className="border px-4 py-2">{item.city?.name ?? '-'}</td>
+                                    <td className="border px-4 py-2">{item.number_member}</td>
+                                    <td className="border px-4 py-2">{item.qty_member ?? '-'}</td>
+                                    <td className="space-x-2 border px-4 py-2">
+                                        <button onClick={() => openModal(item)} className="rounded bg-yellow-500 px-3 py-1 text-white">
+                                            Edit
+                                        </button>
+                                        <button onClick={() => handleDelete(item.id)} className="rounded bg-red-500 px-3 py-1 text-white">
+                                            Hapus
+                                        </button>
+                                    </td>
+                                </tr>
+                            ))}
                     </tbody>
                 </table>
 

@@ -4,6 +4,7 @@ import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
 import { Head, useForm } from '@inertiajs/react';
 import React, { useState } from 'react';
+import toast from 'react-hot-toast';
 
 const breadcrumbs: BreadcrumbItem[] = [{ title: 'Lomba', href: '/races' }];
 
@@ -48,6 +49,7 @@ export default function Races({ races }: any) {
                     reset();
                     setShowModal(false);
                     setEditId(null);
+                    toast.success('Data lomba berhasil diubah');
                 },
             });
         } else {
@@ -55,6 +57,7 @@ export default function Races({ races }: any) {
                 onSuccess: () => {
                     reset();
                     setShowModal(false);
+                    toast.success('Data lomba berhasil ditambahkan');
                 },
             });
         }
@@ -63,6 +66,7 @@ export default function Races({ races }: any) {
     const handleDelete = (id: number) => {
         if (confirm('Yakin ingin menghapus lomba ini?')) {
             destroy(route('races.destroy', id));
+            toast.success('Data lomba berhasil dihapus');
         }
     };
 

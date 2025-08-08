@@ -28,8 +28,21 @@ class ScoreController extends Controller
      */
     public function store(Request $request)
     {
+        // Convert MM:SS:ms ke milidetik
+        $parts = explode(':', $request->time);
+        $minutes = (int) $parts[0];
+        $seconds = (int) $parts[1];
+        $milliseconds = (int) $parts[2];
+
+        $totalMilliseconds = ($minutes * 60 * 1000) + ($seconds * 1000) + $milliseconds;
+
         try {
-            Score::create($request->all());
+            Score::create([
+                'city_id' => $request->city_id,
+                'member_id' => $request->member_id,
+                'race_id' => $request->race_id,
+                'time' => $totalMilliseconds
+            ]);
             return redirect()->back();
         } catch (\Throwable $th) {
             return redirect()->back()->with('error', $th->getMessage());

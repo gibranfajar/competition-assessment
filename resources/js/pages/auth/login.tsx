@@ -1,8 +1,8 @@
-import InputError from '@/components/input-error';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useForm } from '@inertiajs/react';
 import { FormEventHandler } from 'react';
+import toast, { Toaster } from 'react-hot-toast';
 
 type LoginForm = {
     email: string;
@@ -21,6 +21,10 @@ export default function Login() {
         e.preventDefault();
         post(route('login'), {
             onFinish: () => reset('password'),
+
+            onError: () => {
+                toast.error(errors.email || errors.password || 'Invalid email or password');
+            },
         });
     };
 
@@ -45,7 +49,6 @@ export default function Login() {
                             onChange={(e) => setData('email', e.target.value)}
                             placeholder="email@example.com"
                         />
-                        <InputError message={errors.email} />
                     </div>
                     <div className="mb-4">
                         <Label htmlFor="password">Password</Label>
@@ -59,13 +62,13 @@ export default function Login() {
                             onChange={(e) => setData('password', e.target.value)}
                             placeholder="Password"
                         />
-                        <InputError message={errors.password} />
                     </div>
                     <button type="submit" className="w-full rounded-md bg-blue-600 py-2 text-white hover:bg-blue-700">
                         Login
                     </button>
                 </form>
             </div>
+            <Toaster position="top-right" />
         </div>
     );
 }

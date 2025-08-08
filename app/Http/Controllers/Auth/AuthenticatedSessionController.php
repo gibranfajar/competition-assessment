@@ -45,7 +45,8 @@ class AuthenticatedSessionController extends Controller
 
         $request->session()->regenerate();
 
-        return redirect()->intended(route('dashboard', absolute: false));
+        return redirect()->intended(route('dashboard', absolute: false))
+            ->with('success', 'Login berhasil!');
     }
 
     public function logincity(Request $request): RedirectResponse
@@ -58,11 +59,16 @@ class AuthenticatedSessionController extends Controller
 
         $user = User::where('username', $credentials['username'])->first();
 
-        if (! $user || ! Hash::check($credentials['password'], $user->password)) {
-            logger('Login gagal');
+        if (! $user || !Hash::check($credentials['password'], $user->password)) {
             return back()->withErrors([
-                'username' => 'Username atau password salah.',
-            ])->withInput();
+                'password' => 'Kota atau password salah.',
+            ]);
+        }
+
+        if ($user->count_access >= 10) {
+            return back()->withErrors([
+                'username' => 'Anda telah mencapai batas login.',
+            ]);
         }
 
         // Update count
