@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Score;
 use Illuminate\Http\Request;
+use Illuminate\Validation\ValidationException;
 
 class ScoreController extends Controller
 {
@@ -28,13 +29,22 @@ class ScoreController extends Controller
      */
     public function store(Request $request)
     {
-        try {
-            Score::create($request->all());
-            return redirect()->back();
-        } catch (\Throwable $th) {
-            return redirect()->back()->with('error', $th->getMessage());
+        // Validasi custom race_id dan member_id
+        $exists = Score::where('race_id', $request->race_id)
+            ->where('member_id', $request->member_id)
+            ->exists();
+
+        if ($exists) {
+            throw ValidationException::withMessages([
+                'member_id' => 'Skor untuk pasukan dan lomba ini sudah ada.',
+            ]);
         }
+
+        Score::create($request->all());
+
+        return back()->with('success', 'Skor berhasil ditambahkan');
     }
+
 
     /**
      * Display the specified resource.
