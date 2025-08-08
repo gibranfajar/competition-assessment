@@ -1,6 +1,6 @@
 import { useForm } from '@inertiajs/react';
 
-export default function DashboardAdmin({ races, members, city, scores }: any) {
+export default function DashboardAdmin({ races, members, city, grouped, bestTimePerRace }: any) {
     const { data, setData, post, processing, errors } = useForm({
         city_id: city.id,
         race_id: '',
@@ -8,16 +8,40 @@ export default function DashboardAdmin({ races, members, city, scores }: any) {
         time: '',
     });
 
+    const handleTimeChange = (e) => {
+        let raw = e.target.value.replace(/[^0-9]/g, ''); // Hanya angka
+
+        // Batasi panjang hanya sampai 8 digit angka
+        if (raw.length > 8) {
+            raw = raw.slice(0, 8);
+        }
+
+        let mm = raw.slice(0, 2);
+        let ss = raw.slice(2, 4);
+        let xx = raw.slice(4, 6);
+
+        // Validasi nilai
+        if (mm.length === 2 && parseInt(mm) > 59) mm = '59';
+        if (ss.length === 2 && parseInt(ss) > 59) ss = '59';
+        if (xx.length === 2 && parseInt(xx) > 99) xx = '99';
+
+        // Gabungkan dengan : dan .
+        let formatted = '';
+        if (mm) formatted += mm;
+        if (ss) formatted += ':' + ss;
+        if (xx) formatted += '.' + xx;
+
+        setData((prevData) => ({
+            ...prevData,
+            time: formatted,
+        }));
+    };
+
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
 
-        const payload = {
-            ...data,
-            time: convertTimeToMilliseconds(data.time),
-        };
-
+        // Ganti route ini sesuai dengan route backend kamu
         post(route('scores.store'), {
-            data: payload,
             preserveScroll: true,
         });
     };
@@ -25,90 +49,6 @@ export default function DashboardAdmin({ races, members, city, scores }: any) {
     const handleLogout = () => {
         post(route('admins.logout'));
     };
-
-    const handleTimeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        let input = e.target.value.replace(/\D/g, ''); // hapus semua non-digit
-
-        if (input.length > 7) {
-            input = input.slice(0, 7); // batas maksimal 7 digit
-        }
-
-        let formatted = input;
-
-        if (input.length >= 3) {
-            // MM:SS.ms (02:15.123)
-            const minutes = input.slice(0, 2);
-            const seconds = input.slice(2, 4);
-            const milliseconds = input.slice(4);
-            formatted = `${minutes}:${seconds}`;
-            if (milliseconds) {
-                formatted += `.${milliseconds}`;
-            }
-        } else if (input.length >= 1 && input.length <= 2) {
-            // masih ketik menit
-            formatted = input;
-        }
-
-        setData({ ...data, time: formatted });
-    };
-
-    const convertTimeToMilliseconds = (timeStr: string): number => {
-        const [minutes, seconds, milliseconds] = timeStr.split(':').map(Number);
-        return minutes * 60 * 1000 + seconds * 1000 + milliseconds;
-    };
-
-    const formatMilliseconds = (ms: number): string => {
-        const minutes = Math.floor(ms / 60000);
-        const seconds = Math.floor((ms % 60000) / 1000);
-        const milliseconds = ms % 1000;
-
-        const pad = (num: number, size: number) => String(num).padStart(size, '0');
-
-        return `${pad(minutes, 2)}:${pad(seconds, 2)}.${pad(milliseconds, 3)}`;
-    };
-
-    const groupedByMember = scores.reduce((acc, score) => {
-        const memberId = score.member.id;
-        if (!acc[memberId]) {
-            acc[memberId] = {
-                member: score.member,
-                scores: {},
-            };
-        }
-        acc[memberId].scores[score.race.code] = score.time;
-        return acc;
-    }, {});
-
-    const bestTimePerRace = races.map((race: any) => {
-        const filtered = scores.filter((score: any) => score.race.code === race.code && score.time !== null && score.member.city.name === city.name);
-
-        const grouped = filtered.reduce((acc: any, score: any) => {
-            const memberId = score.member.id;
-
-            if (!acc[memberId]) {
-                acc[memberId] = {
-                    member: score.member,
-                    time: 0,
-                };
-            }
-
-            acc[memberId].time += score.time;
-            return acc;
-        }, {});
-
-        const result = Object.values(grouped) as {
-            member: any;
-            time: number;
-        }[];
-
-        const fastest = result.sort((a, b) => a.time - b.time)[0];
-
-        return {
-            raceName: race.name,
-            member: fastest?.member,
-            time: fastest?.time,
-        };
-    });
 
     return (
         <div className="bg-gray-50 p-6">
@@ -124,10 +64,14 @@ export default function DashboardAdmin({ races, members, city, scores }: any) {
             {/* Best Time Cards */}
             <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
                 {bestTimePerRace.map((item, index) => (
-                    <div key={index} className="rounded-md bg-white p-4 shadow-md">
-                        <h3 className="text-lg font-medium">Best Time - {item.raceName}</h3>
-                        <p>No Pasukan: {item.member?.number_member ?? '-'}</p>
-                        <p>Total Waktu: {item.time !== undefined ? formatMilliseconds(item.time) : '-'}</p>
+                    <div key={index} className="rounded-md bg-white p-4 shadow-md transition duration-200 hover:shadow-lg">
+                        <h3 className="text-lg font-medium text-gray-800">Best Time - {item.raceName}</h3>
+                        <p className="text-sm text-gray-600">
+                            No Pasukan: <span className="font-semibold text-gray-900">{item.member?.number_member ?? '-'}</span>
+                        </p>
+                        <p className="text-sm text-gray-600">
+                            Total Waktu: <span className="font-semibold text-gray-900">{item.time ?? '-'}</span>
+                        </p>
                     </div>
                 ))}
             </div>
@@ -165,8 +109,8 @@ export default function DashboardAdmin({ races, members, city, scores }: any) {
                             className="mt-1 block w-full rounded-md border border-gray-300 px-4 py-2 shadow-sm"
                         >
                             <option value="">Pilih Pasukan</option>
-                            {members.map((pasukan: any) => (
-                                <option key={pasukan.id} value={pasukan.id}>
+                            {members.map((pasukan, index) => (
+                                <option key={index} value={pasukan.id}>
                                     {pasukan.number_member}
                                 </option>
                             ))}
@@ -176,19 +120,17 @@ export default function DashboardAdmin({ races, members, city, scores }: any) {
                 </div>
 
                 <div className="mt-4">
-                    <label htmlFor="time" className="block text-sm font-medium text-gray-700">
-                        Waktu Lomba (MM:SS.ms)
+                    <label htmlFor="waktuLomba" className="block text-sm font-medium text-gray-700">
+                        Waktu Lomba (MM:SS.MS)
                     </label>
                     <input
                         type="text"
                         id="time"
-                        name="time"
                         value={data.time}
                         onChange={handleTimeChange}
-                        placeholder="02:15.123"
-                        maxLength={9}
-                        pattern="^[0-5]?[0-9]:[0-5][0-9].\d{1,3}$"
-                        className="focus:ring-opacity-50 mt-1 block w-full rounded-md border border-gray-300 px-4 py-2 shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200"
+                        placeholder="01:23.45"
+                        maxLength={8}
+                        className="mt-1 block w-full rounded-md border border-gray-300 px-4 py-2 shadow-sm"
                     />
                     {errors.time && <p className="text-sm text-red-500">{errors.time}</p>}
                 </div>
@@ -208,7 +150,7 @@ export default function DashboardAdmin({ races, members, city, scores }: any) {
                     <thead>
                         <tr className="border-b bg-gray-100">
                             <th className="px-4 py-2 text-left">No Pasukan</th>
-                            {races.map((race: any) => (
+                            {races.map((race) => (
                                 <th key={race.id} className="px-4 py-2 text-left">
                                     {race.name}
                                 </th>
@@ -217,12 +159,12 @@ export default function DashboardAdmin({ races, members, city, scores }: any) {
                         </tr>
                     </thead>
                     <tbody>
-                        {Object.values(groupedByMember).map((group: any, index) => (
+                        {Object.values(grouped).map((group: any, index) => (
                             <tr key={index} className="border-b">
                                 <td className="px-4 py-2">{group.member.number_member}</td>
-                                {races.map((race: any) => (
+                                {races.map((race) => (
                                     <td key={race.id} className="px-4 py-2">
-                                        {group.scores[race.code] !== undefined ? formatMilliseconds(group.scores[race.code]) : '-'}
+                                        {group.scores[race.code] || '-'}
                                     </td>
                                 ))}
                                 <td className="px-4 py-2">{group.member.city.name}</td>

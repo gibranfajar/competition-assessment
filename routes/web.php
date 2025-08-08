@@ -1,9 +1,9 @@
 <?php
 
-use App\Http\Controllers\AdminController;
 use App\Http\Controllers\MemberController;
 use App\Http\Controllers\RaceController;
 use App\Http\Controllers\ScoreController;
+use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -13,8 +13,13 @@ Route::get('/', function () {
 
 Route::middleware(['auth', 'verified'])->group(function () {
     // auth admin superadmin
-    Route::get('dashboard', [AdminController::class, 'superadmin'])->name('dashboard');
-    Route::resource('admins', AdminController::class);
+    Route::get('dashboard', [UserController::class, 'superadmin'])->name('dashboard');
+    Route::get('/admins', [UserController::class, 'index'])->name('admins.index');
+    Route::post('/admins', [UserController::class, 'store'])->name('admins.store');
+    Route::put('/admins/{admin}', [UserController::class, 'update'])->name('admins.update');
+    Route::delete('/admins/{admin}', [UserController::class, 'destroy'])->name('admins.destroy');
+
+
 
     // lomba / races
     Route::resource('races', RaceController::class);
@@ -26,8 +31,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
 });
 
 Route::middleware(['auth'])->group(function () {
-    Route::get('/admin/dashboard', [AdminController::class, 'dashboard'])->name('admins.dashboard');
-    Route::post('/admin-logout', [AdminController::class, 'logout'])->name('admins.logout');
+    Route::get('/admin/dashboard', [UserController::class, 'dashboard'])->name('admins.dashboard');
+    Route::post('/admin-logout', [UserController::class, 'logout'])->name('admins.logout');
     Route::resource('scores', ScoreController::class);
 });
 

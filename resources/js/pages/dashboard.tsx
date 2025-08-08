@@ -5,17 +5,16 @@ import { useMemo, useState } from 'react';
 
 const breadcrumbs: BreadcrumbItem[] = [{ title: 'Dashboard', href: '/dashboard' }];
 
-export default function Dashboard({ scores, races, cities }: any) {
+export default function Dashboard({ scores, races, cities, bestTimePerRace }: any) {
     const [cityFilter, setCityFilter] = useState<string>('all');
 
-    const formatMilliseconds = (ms: number): string => {
-        const minutes = Math.floor(ms / 60000);
-        const seconds = Math.floor((ms % 60000) / 1000);
-        const milliseconds = ms % 1000;
+    const convertTimeToMilliseconds = (time: string): number => {
+        if (!/^\d{2}:\d{2}\.\d{2}$/.test(time)) return 0;
 
-        const pad = (num: number, size: number) => String(num).padStart(size, '0');
+        const [minutes, rest] = time.split(':');
+        const [seconds, hundredths] = rest.split('.');
 
-        return `${pad(minutes, 2)}:${pad(seconds, 2)}.${pad(milliseconds, 3)}`;
+        return parseInt(minutes) * 60 * 1000 + parseInt(seconds) * 1000 + parseInt(hundredths) * 10;
     };
 
     const grouped = scores.reduce((acc: any, score: any) => {
@@ -35,14 +34,25 @@ export default function Dashboard({ scores, races, cities }: any) {
         }
 
         const raceCode = score.race.code;
-        acc[memberId].lombaTimes[raceCode] = score.time != null ? formatMilliseconds(score.time) : '-';
+        const timeString = score.time;
 
-        if (score.time != null) {
-            acc[memberId].totalMilliseconds += score.time;
+        acc[memberId].lombaTimes[raceCode] = timeString ?? '-';
+
+        if (timeString != null) {
+            acc[memberId].totalMilliseconds += convertTimeToMilliseconds(timeString);
         }
 
         return acc;
     }, {});
+
+    const formatMilliseconds = (ms: number): string => {
+        const totalSeconds = Math.floor(ms / 1000);
+        const minutes = Math.floor(totalSeconds / 60);
+        const seconds = totalSeconds % 60;
+        const hundredths = Math.floor((ms % 1000) / 10);
+
+        return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}.${String(hundredths).padStart(2, '0')}`;
+    };
 
     const rows = Object.values(grouped).map((item: any) => ({
         ...item,
@@ -56,37 +66,6 @@ export default function Dashboard({ scores, races, cities }: any) {
         const unique = Array.from(new Set(cities.map((c: any) => c.name)));
         return ['all', ...unique];
     }, [cities]);
-
-    const bestTimePerRace = races.map((race: any) => {
-        const filtered = scores.filter((score: any) => score.race.code === race.code && score.time !== null);
-
-        const grouped = filtered.reduce((acc: any, score: any) => {
-            const memberId = score.member.id;
-
-            if (!acc[memberId]) {
-                acc[memberId] = {
-                    member: score.member,
-                    time: 0,
-                };
-            }
-
-            acc[memberId].time += score.time;
-            return acc;
-        }, {});
-
-        const result = Object.values(grouped) as {
-            member: any;
-            time: number;
-        }[];
-
-        const fastest = result.sort((a, b) => a.time - b.time)[0];
-
-        return {
-            raceName: race.name,
-            member: fastest?.member,
-            time: fastest?.time,
-        };
-    });
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
@@ -104,16 +83,16 @@ export default function Dashboard({ scores, races, cities }: any) {
                     </select>
                 </div>
 
-                {/* Placeholder Cards */}
-                <div className="mb-6 grid gap-4 md:grid-cols-3">
-                    {bestTimePerRace.map((item, index) => (
-                        <div key={index} className="rounded-lg border bg-white p-4 shadow-md">
-                            <h3 className="mb-2 text-lg font-semibold">Best Time National - {item.raceName}</h3>
-                            <p className="text-sm text-gray-700">
-                                No Pasukan: <span className="font-medium">{item.member?.number_member ?? '-'}</span>
+                {/* Best Time Cards */}
+                <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
+                    {bestTimePerRace.map((item: any, index: number) => (
+                        <div key={index} className="rounded-md bg-white p-4 shadow-md transition duration-200 hover:shadow-lg">
+                            <h3 className="font-medium text-gray-800">Best Time - {item.raceName}</h3>
+                            <p className="text-sm text-gray-600">
+                                No Pasukan: <span className="font-semibold text-gray-900">{item.member?.number_member ?? '-'}</span>
                             </p>
-                            <p className="text-sm text-gray-700">
-                                Total Waktu: <span className="font-medium">{item.time !== undefined ? formatMilliseconds(item.time) : '-'}</span>
+                            <p className="text-sm text-gray-600">
+                                Total Waktu: <span className="font-semibold text-gray-900">{item.time ?? '-'}</span>
                             </p>
                         </div>
                     ))}

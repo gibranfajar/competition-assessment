@@ -8,4 +8,9 @@ class Race extends Model
 {
     protected $table = 'races';
     protected $guarded = [];
+
+    public function scores()
+    {
+        return $this->hasMany(Score::class);
+    }
 }

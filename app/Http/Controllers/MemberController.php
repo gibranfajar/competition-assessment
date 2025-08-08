@@ -36,12 +36,32 @@ class MemberController extends Controller
     public function store(Request $request)
     {
         try {
+            // Validasi sederhana
+            $request->validate([
+                'number_member' => 'required|string',
+                'city_id' => 'required|string',
+            ]);
+
+            // Cek duplikat
+            $exists = Member::where('number_member', $request->number_member)
+                ->where('city_id', $request->city_id)
+                ->exists();
+
+            if ($exists) {
+                return redirect()->back()->withErrors([
+                    'number_member' => 'Nomor member sudah ada di kota ini'
+                ]);
+            }
+
+            // Simpan jika tidak ada duplikat
             Member::create($request->all());
-            return redirect()->back();
+
+            return redirect()->back()->with('message', 'Data berhasil disimpan!');
         } catch (\Throwable $th) {
             return redirect()->back()->with('error', $th->getMessage());
         }
     }
+
 
     /**
      * Display the specified resource.
@@ -64,7 +84,12 @@ class MemberController extends Controller
      */
     public function update(Request $request, Member $member)
     {
-        //
+        try {
+            $member->update($request->all());
+            return redirect()->back();
+        } catch (\Throwable $th) {
+            return redirect()->back()->with('error', $th->getMessage());
+        }
     }
 
     /**
@@ -72,6 +97,11 @@ class MemberController extends Controller
      */
     public function destroy(Member $member)
     {
-        //
+        try {
+            $member->delete();
+            return redirect()->back();
+        } catch (\Throwable $th) {
+            return redirect()->back()->with('error', $th->getMessage());
+        }
     }
 }

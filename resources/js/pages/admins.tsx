@@ -4,10 +4,28 @@ import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
 import { Head, useForm } from '@inertiajs/react';
 import React, { useState } from 'react';
+import toast from 'react-hot-toast';
 
 const breadcrumbs: BreadcrumbItem[] = [{ title: 'Admins', href: '/admins' }];
 
-export default function Admins({ admins: initialData, cities: initialCities }: any) {
+interface Admin {
+    id: number;
+    username: string;
+    count_access: number;
+    name?: string;
+}
+
+interface City {
+    id: number;
+    name: string;
+}
+
+interface Props {
+    admins: Admin[];
+    cities: City[];
+}
+
+export default function Admins({ admins: initialData, cities: initialCities }: Props) {
     const [showModal, setShowModal] = useState(false);
     const [editId, setEditId] = useState<number | null>(null);
 
@@ -21,16 +39,16 @@ export default function Admins({ admins: initialData, cities: initialCities }: a
         reset,
         errors,
     } = useForm({
-        password: '',
         username: '',
+        password: '',
     });
 
-    const openModal = (admin: any = null) => {
+    const openModal = (admin: Admin | null = null) => {
         if (admin) {
             setEditId(admin.id);
             setData({
+                username: admin.username,
                 password: '',
-                usernameity: admin.username,
             });
         } else {
             setEditId(null);
@@ -42,27 +60,27 @@ export default function Admins({ admins: initialData, cities: initialCities }: a
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
 
+        const options = {
+            onSuccess: () => {
+                setShowModal(false);
+                toast.success('Data admin berhasil diproses');
+                reset();
+                setEditId(null);
+            },
+        };
+
         if (editId) {
-            put(route('admins.update', editId), {
-                onSuccess: () => {
-                    setShowModal(false);
-                    reset();
-                    setEditId(null);
-                },
-            });
+            console.log(route('admins.update', editId));
+            put(route('admins.update', editId), options);
         } else {
-            post(route('admins.store'), {
-                onSuccess: () => {
-                    setShowModal(false);
-                    reset();
-                },
-            });
+            post(route('admins.store'), options);
         }
     };
 
     const handleDelete = (id: number) => {
         if (confirm('Yakin ingin menghapus admin ini?')) {
             destroy(route('admins.destroy', id));
+            toast.success('Data admin berhasil dihapus');
         }
     };
 
@@ -89,7 +107,7 @@ export default function Admins({ admins: initialData, cities: initialCities }: a
                         </tr>
                     </thead>
                     <tbody>
-                        {initialData.map((item: any, index: number) => (
+                        {initialData.map((item, index) => (
                             <tr key={item.id}>
                                 <td className="border px-4 py-2">{index + 1}</td>
                                 <td className="border px-4 py-2">{item.username}</td>
@@ -113,6 +131,7 @@ export default function Admins({ admins: initialData, cities: initialCities }: a
                         <div className="w-full max-w-md rounded bg-white p-6 shadow-md">
                             <form onSubmit={handleSubmit}>
                                 <h2 className="mb-4 text-lg font-bold">{editId ? 'Edit Admin' : 'Tambah Admin'}</h2>
+
                                 <div className="space-y-4">
                                     <div>
                                         <Label>Pilih Kota</Label>
@@ -123,13 +142,13 @@ export default function Admins({ admins: initialData, cities: initialCities }: a
                                             className="w-full rounded border px-3 py-2"
                                         >
                                             <option value="">-- Pilih Kota --</option>
-                                            {initialCities.map((city: any) => (
+                                            {initialCities.map((city) => (
                                                 <option key={city.id} value={city.name}>
                                                     {city.name}
                                                 </option>
                                             ))}
                                         </select>
-                                        {errors.city && <p className="text-sm text-red-500">{errors.city}</p>}
+                                        {errors.username && <p className="text-sm text-red-500">{errors.username}</p>}
                                     </div>
 
                                     <div>

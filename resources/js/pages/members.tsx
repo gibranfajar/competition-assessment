@@ -62,6 +62,10 @@ export default function Members({ members, cities }: any) {
                     setShowModal(false);
                     toast.success('Data anggota berhasil ditambahkan');
                 },
+
+                onError: () => {
+                    toast.error('Data anggota gagal ditambahkan');
+                },
             });
         }
     };
@@ -69,7 +73,6 @@ export default function Members({ members, cities }: any) {
     const handleDelete = (id: number) => {
         if (confirm('Yakin ingin menghapus data anggota ini?')) {
             destroy(route('members.destroy', id));
-            toast.success('Data anggota berhasil dihapus');
         }
     };
 

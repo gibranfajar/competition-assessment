@@ -16,7 +16,7 @@ return new class extends Migration
             $table->foreignId('city_id')->constrained();
             $table->foreignId('member_id')->constrained();
             $table->foreignId('race_id')->constrained();
-            $table->bigInteger('time');
+            $table->string('time');
             $table->integer('pe_point')->nullable();
             $table->integer('ace_point')->nullable();
             $table->integer('dday_point')->nullable();
