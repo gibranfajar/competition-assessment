@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('races', function (Blueprint $table) {
             $table->id();
-            $table->char('code', 3)->unique();
+            $table->char('code', 6)->unique();
             $table->string('name');
             $table->timestamps();
         });

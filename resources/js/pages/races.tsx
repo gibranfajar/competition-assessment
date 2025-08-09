@@ -119,10 +119,10 @@ export default function Races({ races }: any) {
                                 <h2 className="mb-4 text-lg font-bold">{editId ? 'Edit Lomba' : 'Tambah Lomba'}</h2>
                                 <div className="space-y-4">
                                     <div>
-                                        <Label>Kode Lomba (3 huruf)</Label>
+                                        <Label>Kode Lomba (Max 6 karakter)</Label>
                                         <Input
                                             name="code"
-                                            maxLength={3}
+                                            maxLength={6}
                                             value={data.code}
                                             onChange={(e) => setData('code', e.target.value.toUpperCase())}
                                         />

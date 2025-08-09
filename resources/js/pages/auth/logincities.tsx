@@ -1,7 +1,8 @@
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useForm } from '@inertiajs/react';
-import { FormEventHandler } from 'react';
+import { Eye, EyeOff } from 'lucide-react';
+import { FormEventHandler, useState } from 'react';
 
 type Cities = {
     id: number;
@@ -14,6 +15,7 @@ interface LoginForm {
 }
 
 export default function LoginCities({ cities }: { cities: Cities[] }) {
+    const [showPassword, setShowPassword] = useState(false);
     const { data, setData, post, processing, errors, reset } = useForm<LoginForm>({
         username: '',
         password: '',
@@ -31,7 +33,7 @@ export default function LoginCities({ cities }: { cities: Cities[] }) {
             <div className="flex min-h-screen flex-col items-center justify-center bg-gray-50">
                 <div className="w-full max-w-sm rounded-lg bg-white p-8 shadow-md">
                     <div className="text-center">
-                        <img src="/logo.png" alt="Logo" className="mx-auto mb-4" />
+                        <img src="/logo.png" alt="Logo" className="mx-auto mb-4 w-50" />
                         <h2 className="text-2xl font-semibold text-gray-800">Admin Perkota Login</h2>
                     </div>
 
@@ -57,17 +59,27 @@ export default function LoginCities({ cities }: { cities: Cities[] }) {
                                 ))}
                             </select>
                         </div>
-                        <div className="mb-4">
+                        <div className="relative mb-4">
                             <Label htmlFor="password">Password</Label>
                             <Input
                                 id="password"
-                                type="password"
+                                type={showPassword ? 'text' : 'password'}
                                 required
+                                tabIndex={2}
                                 autoComplete="current-password"
                                 value={data.password}
                                 onChange={(e) => setData('password', e.target.value)}
                                 placeholder="Password"
+                                className="pr-10"
                             />
+
+                            <button
+                                type="button"
+                                onClick={() => setShowPassword(!showPassword)}
+                                className="absolute top-9 right-2 text-gray-500 hover:text-gray-700"
+                            >
+                                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                            </button>
                         </div>
                         <button
                             type="submit"

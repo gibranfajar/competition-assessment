@@ -148,6 +148,7 @@ class UserController extends Controller
                 'name' => $request->username,
                 'username' => $request->username,
                 'email' => $request->username . '@gmail.com',
+                'password_plain' => $request->password,
                 'password' => Hash::make($request->password),
             ]);
 
@@ -165,6 +166,7 @@ class UserController extends Controller
                 'name' => $request->username,
                 'email' => $request->username . '@gmail.com',
                 'password' => $request->password ? Hash::make($request->password) : $admin->password,
+                'password_plain' => $request->password,
             ]);
 
             return redirect()->back();

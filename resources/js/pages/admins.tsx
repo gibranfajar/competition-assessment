@@ -3,6 +3,7 @@ import { Label } from '@/components/ui/label';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
 import { Head, useForm } from '@inertiajs/react';
+import { Eye, EyeOff } from 'lucide-react';
 import React, { useState } from 'react';
 import toast from 'react-hot-toast';
 
@@ -11,6 +12,7 @@ const breadcrumbs: BreadcrumbItem[] = [{ title: 'Admins', href: '/admins' }];
 interface Admin {
     id: number;
     username: string;
+    password_plain: string;
     count_access: number;
     name?: string;
 }
@@ -26,6 +28,7 @@ interface Props {
 }
 
 export default function Admins({ admins: initialData, cities: initialCities }: Props) {
+    const [show, setShow] = useState(false);
     const [showModal, setShowModal] = useState(false);
     const [editId, setEditId] = useState<number | null>(null);
 
@@ -102,6 +105,7 @@ export default function Admins({ admins: initialData, cities: initialCities }: P
                         <tr className="bg-gray-200">
                             <th className="border px-4 py-2">No</th>
                             <th className="border px-4 py-2">Kota</th>
+                            <th className="border px-4 py-2">Password</th>
                             <th className="border px-4 py-2">Total Login</th>
                             <th className="border px-4 py-2">Aksi</th>
                         </tr>
@@ -111,6 +115,12 @@ export default function Admins({ admins: initialData, cities: initialCities }: P
                             <tr key={item.id}>
                                 <td className="border px-4 py-2">{index + 1}</td>
                                 <td className="border px-4 py-2">{item.username}</td>
+                                <td className="flex items-center justify-between gap-2 px-4 py-2">
+                                    <span>{show ? item.password_plain : '•'.repeat(item.password_plain.length)}</span>
+                                    <button type="button" onClick={() => setShow(!show)} className="text-gray-500 hover:text-gray-700">
+                                        {show ? <EyeOff size={16} /> : <Eye size={16} />}
+                                    </button>
+                                </td>
                                 <td className="border px-4 py-2">{item.count_access}</td>
                                 <td className="space-x-2 border px-4 py-2">
                                     <button onClick={() => openModal(item)} className="rounded bg-yellow-500 px-3 py-1 text-white">

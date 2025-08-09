@@ -6,15 +6,15 @@ export default function Welcome() {
             <div className="w-full max-w-md rounded-lg bg-white p-8 shadow-lg">
                 {/* Logo and Title */}
                 <div className="mb-8 text-center">
-                    <img src="/logo.png" alt="Logo" className="mx-auto mb-4" />
-                    <h1 className="text-3xl font-bold text-gray-800">Welcome to the Lomba System</h1>
+                    <img src="/logo.png" alt="Logo" className="mx-auto mb-4 w-50" />
+                    <h1 className="text-2xl font-bold text-gray-800">SISTEM PENILAIAN LOMBA HIROpendence Day</h1>
                 </div>
 
                 {/* Choose Role */}
                 <div className="grid grid-rows-2 gap-4">
                     <Link href="/login">
                         <div className="rounded-md bg-blue-600 p-4 text-center text-white shadow-md">
-                            <h3 className="text-xl font-semibold">Login as Super Admin</h3>
+                            <h3 className="text-xl font-semibold">Login as Master Admin</h3>
                             <p className="mt-2">Access all data and manage the system.</p>
                         </div>
                     </Link>
