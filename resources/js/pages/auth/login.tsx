@@ -78,6 +78,9 @@ export default function Login() {
                         Login
                     </button>
                 </form>
+                <div className="mt-8 text-center text-sm text-gray-600">
+                    <p>Powered by Ottimo Multima Grup</p>
+                </div>
             </div>
             <Toaster position="top-right" />
         </div>

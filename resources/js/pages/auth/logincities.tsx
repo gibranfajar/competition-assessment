@@ -89,6 +89,9 @@ export default function LoginCities({ cities }: { cities: Cities[] }) {
                             {processing ? 'Logging in...' : 'Login'}
                         </button>
                     </form>
+                    <div className="mt-8 text-center text-sm text-gray-600">
+                        <p>Powered by Ottimo Multima Grup</p>
+                    </div>
                 </div>
             </div>
         </>

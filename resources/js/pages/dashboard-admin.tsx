@@ -187,6 +187,9 @@ export default function DashboardAdmin({ races, members, city, grouped, bestTime
                         </tbody>
                     </table>
                 </div>
+                <div className="mt-8 text-center text-sm text-gray-600">
+                    <p>Powered by Ottimo Multima Grup</p>
+                </div>
             </div>
             <Toaster position="top-right" />
         </>
