@@ -1,0 +1,40 @@
+name: Deploy Laravel with Docker and Vite
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Setup SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan -H 69.62.72.90 >> ~/.ssh/known_hosts
+
+      - name: Deploy to Server
+        run: |
+          ssh gibran@69.62.72.90 << 'EOF'
+          # 1. Update Laravel source
+          cd ~/projects/assessment/src
+          git pull origin main
+
+          # 2. Install PHP dependencies
+          cd ~/projects/assessment
+          docker compose exec -T app composer install --no-interaction --prefer-dist --optimize-autoloader
+
+          # 3. Install JS dependencies & build Vite
+          docker compose exec -T node npm install
+          docker compose exec -T node npm run build
+
+          # 4. Run migrations
+          docker compose exec -T app php artisan migrate --force
+
+          # 5. Restart PHP & Nginx
+          docker compose restart app web
+          EOF
