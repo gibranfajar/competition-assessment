@@ -53,17 +53,14 @@ export default function DashboardAdmin({ races, members, city, grouped, bestTime
 
     return (
         <>
-            <div
-                className="p-6"
-                style={{ backgroundImage: 'linear-gradient(to right, #b8cbb8 0%, #b8cbb8 0%, #ae0d0d 0%, #a60b0b 33%, #b10a4f 66%, #a9084b 100%)' }}
-            >
+            <div className="min-h-screen bg-slate-100 p-6">
                 <div className="flex justify-between">
                     <div className="">
                         <img src="/logo.png" alt="Logo" className="h-16" />
                     </div>
                     <div className="">
-                        <h2 className="text-center text-3xl font-semibold text-white">Penilaian Lomba</h2>
-                        <h2 className="mb-6 text-center text-2xl font-semibold text-white">Best Time - {city.name}</h2>
+                        <h2 className="text-center text-3xl font-semibold">Penilaian Lomba</h2>
+                        <h2 className="mb-6 text-center text-2xl font-semibold">Best Time - {city.name}</h2>
                     </div>
                     <div className="">
                         <img src="/logo-indosat.png" alt="Logo" className="h-16" />
@@ -71,7 +68,7 @@ export default function DashboardAdmin({ races, members, city, grouped, bestTime
                 </div>
                 <div className="flex justify-end">
                     <button
-                        className="my-4 rounded border-2 border-white bg-purple-500 px-4 py-2 font-bold text-white hover:bg-purple-600"
+                        className="my-4 rounded border-2 border-white bg-red-500 px-4 py-2 font-bold text-white hover:bg-red-600"
                         onClick={handleLogout}
                     >
                         Logout
@@ -81,16 +78,13 @@ export default function DashboardAdmin({ races, members, city, grouped, bestTime
                 {/* Best Time Cards */}
                 <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
                     {bestTimePerRace.map((item, index) => (
-                        <div
-                            key={index}
-                            className="rounded-xl border-2 border-white bg-yellow-400 p-4 shadow-md transition duration-200 hover:shadow-lg"
-                        >
+                        <div key={index} className="rounded-xl border-2 border-zinc-200 p-4 shadow-md transition duration-200 hover:shadow-lg">
                             <h3 className="text-lg font-medium text-gray-800">Best Time - {item.raceName}</h3>
                             <p className="text-sm text-gray-600">
                                 No Pasukan: <span className="font-semibold text-gray-900">{item.member?.number_member ?? '-'}</span>
                             </p>
                             <p className="text-sm text-gray-600">
-                                Total Waktu: <span className="rounded bg-purple-600 px-2 font-semibold text-white">{item.time ?? '-'}</span>
+                                Total Waktu: <span className="rounded px-2 font-semibold">{item.time ?? '-'}</span>
                             </p>
                         </div>
                     ))}
@@ -102,14 +96,14 @@ export default function DashboardAdmin({ races, members, city, grouped, bestTime
                 <form onSubmit={handleSubmit} className="mb-6">
                     <div className="grid grid-cols-2 gap-4">
                         <div>
-                            <label htmlFor="lomba" className="block text-sm font-medium text-white">
+                            <label htmlFor="lomba" className="block text-sm font-medium">
                                 Pilih Jenis Lomba
                             </label>
                             <select
                                 id="race_id"
                                 value={data.race_id}
                                 onChange={(e) => setData('race_id', e.target.value)}
-                                className="mt-1 block w-full rounded-md border-2 border-gray-300 bg-yellow-400 px-4 py-2 shadow-sm"
+                                className="mt-1 block w-full rounded-md border-2 border-zinc-200 p-4 py-2 shadow-sm"
                             >
                                 <option value="">Pilih Lomba</option>
                                 {races.map((race: any) => (
@@ -120,14 +114,14 @@ export default function DashboardAdmin({ races, members, city, grouped, bestTime
                             </select>
                         </div>
                         <div>
-                            <label htmlFor="pasukan" className="block text-sm font-medium text-white">
+                            <label htmlFor="pasukan" className="block text-sm font-medium">
                                 No Pasukan
                             </label>
                             <select
                                 id="member_id"
                                 value={data.member_id}
                                 onChange={(e) => setData('member_id', e.target.value)}
-                                className="mt-1 block w-full rounded-md border-2 border-white bg-yellow-400 px-4 py-2 shadow-sm"
+                                className="mt-1 block w-full rounded-md border-2 border-zinc-200 px-4 py-2 shadow-sm"
                             >
                                 <option value="">Pilih Pasukan</option>
                                 {members.map((pasukan, index) => (
@@ -140,7 +134,7 @@ export default function DashboardAdmin({ races, members, city, grouped, bestTime
                     </div>
 
                     <div className="mt-4">
-                        <label htmlFor="waktuLomba" className="block text-sm font-medium text-white">
+                        <label htmlFor="waktuLomba" className="block text-sm font-medium">
                             Waktu Lomba (MM:SS.MS)
                         </label>
                         <input
@@ -150,7 +144,7 @@ export default function DashboardAdmin({ races, members, city, grouped, bestTime
                             onChange={handleTimeChange}
                             placeholder="01:23.45"
                             maxLength={8}
-                            className="mt-1 block w-full rounded-md border-2 border-white bg-yellow-400 px-4 py-2 shadow-sm"
+                            className="mt-1 block w-full rounded-md border-2 border-zinc-200 px-4 py-2 shadow-sm"
                             required
                         />
                     </div>
@@ -158,17 +152,17 @@ export default function DashboardAdmin({ races, members, city, grouped, bestTime
                     <button
                         type="submit"
                         disabled={processing}
-                        className="mt-4 w-full rounded-md border-2 border-white bg-yellow-400 py-2 font-bold hover:bg-yellow-500 disabled:opacity-50"
+                        className="mt-6 w-full rounded-md border-2 border-zinc-200 bg-blue-600 py-2 text-2xl font-bold text-white hover:bg-blue-700 disabled:opacity-50"
                     >
                         {processing ? 'Menyimpan...' : 'SUBMIT'}
                     </button>
                 </form>
 
                 {/* Tabel Data Input */}
-                <div className="mt-6 overflow-x-auto rounded-md border-2 border-white bg-yellow-400 shadow-md">
+                <div className="mt-6 overflow-x-auto rounded-md border-2 border-zinc-200 shadow-md">
                     <table className="min-w-full table-auto">
                         <thead>
-                            <tr className="border-b border-white bg-yellow-400">
+                            <tr className="border-b">
                                 <th className="px-4 py-2 text-left">No Pasukan</th>
                                 {races.map((race) => (
                                     <th key={race.id} className="px-4 py-2 text-left">

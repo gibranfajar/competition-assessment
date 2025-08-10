@@ -29,7 +29,7 @@ export default function Welcome() {
 
                 {/* Footer */}
                 <div className="mt-8 text-center text-sm text-gray-600">
-                    <p>Powered by Lomba System</p>
+                    <p>Powered by Ottimo Multima Grup</p>
                 </div>
             </div>
         </div>
