@@ -1,8 +1,8 @@
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
 import { Head, router } from '@inertiajs/react';
-import { Download } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { ArrowDownUp, Download } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
 
 const breadcrumbs: BreadcrumbItem[] = [{ title: 'Dashboard', href: '/dashboard' }];
 
@@ -64,7 +64,30 @@ export default function Dashboard({ scores, races, cities, bestTimePerRace }: an
     }));
 
     const filteredRows = cityFilter === 'all' ? rows : rows.filter((item: any) => item.area === cityFilter);
-    const rankedRows = [...filteredRows].sort((a, b) => a.totalWaktuMs - b.totalWaktuMs);
+
+    const rankedRows = [...filteredRows].sort((a, b) => a.totalMilliseconds - b.totalMilliseconds);
+
+    // State untuk tabel yang ditampilkan
+    const [filteredRowsTotal, setFilteredRowsTotal] = useState(rankedRows);
+    const [isAscending, setIsAscending] = useState(true);
+
+    // Update state kalau filter kota berubah
+    useEffect(() => {
+        setFilteredRowsTotal(rankedRows);
+    }, [cityFilter]);
+
+    // Toggle sort
+    const handleFilterUpDownPoint = () => {
+        const sorted = [...filteredRowsTotal].sort((a, b) => {
+            if (isAscending) {
+                return a.totalPoin - b.totalPoin; // kecil ke besar
+            }
+            return b.totalPoin - a.totalPoin; // besar ke kecil
+        });
+
+        setFilteredRowsTotal(sorted);
+        setIsAscending(!isAscending);
+    };
 
     const cityOptions = useMemo(() => {
         const unique = Array.from(new Set(cities.map((c: any) => c.name)));
@@ -140,13 +163,18 @@ export default function Dashboard({ scores, races, cities, bestTimePerRace }: an
                                         );
                                     })}
                                     <th className="px-4 py-2 text-left">Total Waktu</th>
-                                    <th className="px-4 py-2 text-left">PE Poin</th>
+                                    <th className="px-4 py-2 text-left">Pre-Event Poin</th>
                                     <th className="px-4 py-2 text-left">D-Day Poin</th>
-                                    <th className="px-4 py-2 text-left">Total Point</th>
+                                    <th className="px-4 py-2 text-left">
+                                        <div className="flex items-center justify-between" onClick={handleFilterUpDownPoint}>
+                                            <span>Total Point</span>
+                                            <ArrowDownUp className="h-4 w-4 cursor-pointer" />
+                                        </div>
+                                    </th>
                                 </tr>
                             </thead>
                             <tbody>
-                                {rankedRows.map((item: any, idx: number) => {
+                                {filteredRowsTotal.map((item: any, idx: number) => {
                                     let rowColor = '';
                                     if (idx === 0)
                                         rowColor = 'bg-[#FFD60A]'; // Rank 1
