@@ -10,31 +10,37 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # 1. Checkout kode
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      # 2. Setup SSH
       - name: Setup SSH
         run: |
           mkdir -p ~/.ssh
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_ed25519
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" | tr -d '\r' > ~/.ssh/id_ed25519
           chmod 600 ~/.ssh/id_ed25519
           ssh-keyscan -H 69.62.72.90 >> ~/.ssh/known_hosts
 
+      # 3. Deploy ke server
       - name: Deploy to Server
         run: |
-          ssh gibran@69.62.72.90 << 'EOF'
-          # 1. Update Laravel source
-          cd ~/projects/assessment/src
-          git pull origin main
-
-          # 2. Install PHP dependencies
+          ssh -o StrictHostKeyChecking=no gibran@69.62.72.90 << 'EOF'
+          # Pastikan Docker Compose up-to-date & container berjalan
           cd ~/projects/assessment
+          docker compose pull
+          docker compose up -d
+
+          # Laravel PHP dependencies
           docker compose exec -T app composer install --no-interaction --prefer-dist --optimize-autoloader
 
-          # 3. Install JS dependencies & build Vite
+          # Node / Vite dependencies & build
           docker compose exec -T node npm install
           docker compose exec -T node npm run build
 
-          # 4. Run migrations
+          # Run Laravel migrations
           docker compose exec -T app php artisan migrate --force
 
-          # 5. Restart PHP & Nginx
+          # Restart services
           docker compose restart app web
           EOF

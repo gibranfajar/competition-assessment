@@ -149,14 +149,14 @@ export default function Dashboard({ scores, races, cities, bestTimePerRace }: an
                                 {rankedRows.map((item: any, idx: number) => {
                                     let rowColor = '';
                                     if (idx === 0)
-                                        rowColor = 'bg-[#FFD700]'; // Rank 1
+                                        rowColor = 'bg-[#FFD60A]'; // Rank 1
                                     else if (idx === 1)
-                                        rowColor = 'bg-[#C0C0C0]'; // Rank 2
+                                        rowColor = 'bg-[#FFD60A]'; // Rank 2
                                     else if (idx === 2)
-                                        rowColor = 'bg-[#CD7F32]'; // Rank 3
+                                        rowColor = 'bg-[#FFD60A]'; // Rank 3
                                     else if (idx === 3)
-                                        rowColor = 'bg-[#1E90FF]'; // Rank 4
-                                    else if (idx === 4) rowColor = 'bg-[#32CD32]'; // Rank 5
+                                        rowColor = 'bg-[#FF8FAB]'; // Rank 4
+                                    else if (idx === 4) rowColor = 'bg-[#FF8FAB]'; // Rank 5
 
                                     return (
                                         <tr key={item.id} className={`border-b ${rowColor}`}>

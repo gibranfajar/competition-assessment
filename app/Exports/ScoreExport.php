@@ -59,11 +59,11 @@ class ScoreExport implements FromArray, WithHeadings, WithStyles
 
         // Warna top 5 (baris 2-6)
         $colors = [
-            'FFD700', // Gold
-            'C0C0C0', // Silver
-            'CD7F32', // Bronze
-            '1E90FF', // Blue
-            '32CD32', // Green
+            'FFD60A', // Gold
+            'FFD60A', // Silver
+            'FFD60A', // Bronze
+            'FF8FAB', // Blue
+            'FF8FAB', // Green
         ];
 
         foreach ($colors as $i => $color) {
