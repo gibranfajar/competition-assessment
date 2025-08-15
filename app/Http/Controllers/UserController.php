@@ -11,6 +11,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Inertia\Inertia;
+use App\Exports\ScoreExport;
+use Maatwebsite\Excel\Facades\Excel;
 
 class UserController extends Controller
 {
@@ -27,11 +29,24 @@ class UserController extends Controller
         return ((int)$minutes * 60) + (int)$seconds + ((int)$hundredths / 100);
     }
 
-    private function convertSecondsToFormattedTime($totalSeconds)
+    private function convertTimeToMilliseconds(?string $time): int
     {
-        $minutes = floor($totalSeconds / 60);
-        $seconds = floor($totalSeconds % 60);
-        $hundredths = round(($totalSeconds - floor($totalSeconds)) * 100);
+        if (!$time || !preg_match('/^\d{2}:\d{2}\.\d{2}$/', $time)) {
+            return 0;
+        }
+
+        [$minutes, $rest] = explode(':', $time);
+        [$seconds, $hundredths] = explode('.', $rest);
+
+        return ((int)$minutes * 60 * 1000) + ((int)$seconds * 1000) + ((int)$hundredths * 10);
+    }
+
+    private function formatMilliseconds(int $ms): string
+    {
+        $totalSeconds = (int) floor($ms / 1000);
+        $minutes = (int) floor($totalSeconds / 60);
+        $seconds = $totalSeconds % 60;
+        $hundredths = (int) floor(($ms % 1000) / 10);
 
         return sprintf('%02d:%02d.%02d', $minutes, $seconds, $hundredths);
     }
@@ -75,6 +90,60 @@ class UserController extends Controller
             'cities' => $cities,
             'bestTimePerRace' => $bestTimePerRace
         ]);
+    }
+
+    public function rankedRows(Request $request)
+    {
+        $races = Race::all();
+
+        // Filter opsional berdasarkan kota
+        $cities = $request->get('city');
+        $cityId = City::where('name', $cities)->first()?->id;
+
+        $scoresQuery = Score::with(['member.city', 'race']);
+        if ($cityId) {
+            $scoresQuery->whereHas('member', fn($q) => $q->where('city_id', $cityId));
+        }
+
+        $scores = $scoresQuery->get();
+
+        // Group & format persis React
+        $grouped = $scores->groupBy('member.id')->map(function ($items) use ($races) {
+            $first = $items->first();
+
+            $row = [
+                'Area'        => $first->member->city->name,
+                'No Pasukan'  => $first->member->number_member,
+                'Total Waktu' => 0,
+                'PE Poin'     => $first->pe_point ?? 0,
+                'DDay Poin'   => $first->dday_point ?? 0,
+            ];
+
+            // Inisialisasi semua lomba = '-'
+            foreach ($races as $race) {
+                $row[$race->code] = '-';
+            }
+
+            // Isi data lomba & total waktu
+            foreach ($items as $score) {
+                if ($score->time) {
+                    $row[$score->race->code] = $score->time;
+                    $row['Total Waktu'] += $this->convertTimeToMilliseconds($score->time);
+                }
+            }
+
+            // Total poin
+            $row['Total Poin'] = $row['PE Poin'] + $row['DDay Poin'];
+            $row['Total Waktu'] = $this->formatMilliseconds($row['Total Waktu']);
+
+            return $row;
+        })->values();
+
+        // Urutkan berdasarkan total waktu (tercepat)
+        $sorted = $grouped->sortBy('Total Waktu')->values();
+
+        // Export ke Excel
+        return Excel::download(new ScoreExport($sorted, $races), 'total-scores-' . now()->format('Ymd') . '-' . $cities . '.xlsx');
     }
 
 

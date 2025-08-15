@@ -7,6 +7,10 @@ use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
+use App\Exports\ScoreExport;
+use Maatwebsite\Excel\Facades\Excel;
+
+
 Route::get('/', function () {
     return Inertia::render('welcome');
 })->name('home');
@@ -28,6 +32,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::resource('members', MemberController::class);
 
     Route::post('/add-point', [ScoreController::class, 'addPoint'])->name('scores.add-point');
+
+    // Export Excell
+    Route::get('/export-scores', [UserController::class, 'rankedRows'])->name('export.ranked');
 });
 
 Route::middleware(['auth'])->group(function () {

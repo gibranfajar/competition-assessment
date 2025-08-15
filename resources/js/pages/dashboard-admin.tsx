@@ -1,5 +1,5 @@
 import { useForm } from '@inertiajs/react';
-import { Toaster } from 'react-hot-toast';
+import toast, { Toaster } from 'react-hot-toast';
 
 export default function DashboardAdmin({ races, members, city, grouped, bestTimePerRace }: any) {
     const { data, setData, post, processing, errors } = useForm({
@@ -40,6 +40,17 @@ export default function DashboardAdmin({ races, members, city, grouped, bestTime
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
+
+        if (!data.race_id || !data.member_id || !data.time) {
+            return;
+        }
+
+        if (data.time.length < 8) {
+            setTimeout(() => {
+                toast.error('Format waktu harus MM:SS.MS');
+            }, 1000);
+            return;
+        }
 
         // Ganti route ini sesuai dengan route backend kamu
         post(route('scores.store'), {

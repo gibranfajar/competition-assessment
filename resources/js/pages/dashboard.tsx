@@ -1,6 +1,7 @@
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
 import { Head, router } from '@inertiajs/react';
+import { Download } from 'lucide-react';
 import { useMemo, useState } from 'react';
 
 const breadcrumbs: BreadcrumbItem[] = [{ title: 'Dashboard', href: '/dashboard' }];
@@ -17,33 +18,35 @@ export default function Dashboard({ scores, races, cities, bestTimePerRace }: an
         return parseInt(minutes) * 60 * 1000 + parseInt(seconds) * 1000 + parseInt(hundredths) * 10;
     };
 
-    const grouped = scores.reduce((acc: any, score: any) => {
-        const memberId = score.member.id;
+    const grouped = Object.values(
+        scores.reduce((acc: any, score: any) => {
+            const memberId = score.member.id;
 
-        if (!acc[memberId]) {
-            acc[memberId] = {
-                id: score.member.id,
-                area: score.member.city.name,
-                noPasukan: score.member.number_member,
-                lombaTimes: {},
-                totalMilliseconds: 0,
-                pePoin: score.pe_point || 0,
-                acePoin: score.ace_point || 0,
-                dDayPoin: score.dday_point || 0,
-            };
-        }
+            if (!acc[memberId]) {
+                acc[memberId] = {
+                    id: score.member.id,
+                    area: score.member.city.name,
+                    noPasukan: score.member.number_member,
+                    lombaTimes: {},
+                    totalMilliseconds: 0,
+                    pePoin: score.pe_point || 0,
+                    acePoin: score.ace_point || 0,
+                    dDayPoin: score.dday_point || 0,
+                };
+            }
 
-        const raceCode = score.race.code;
-        const timeString = score.time;
+            const raceCode = score.race.code;
+            const timeString = score.time;
 
-        acc[memberId].lombaTimes[raceCode] = timeString ?? '-';
+            acc[memberId].lombaTimes[raceCode] = timeString ?? '-';
 
-        if (timeString != null) {
-            acc[memberId].totalMilliseconds += convertTimeToMilliseconds(timeString);
-        }
+            if (timeString != null) {
+                acc[memberId].totalMilliseconds += convertTimeToMilliseconds(timeString);
+            }
 
-        return acc;
-    }, {});
+            return acc;
+        }, {}),
+    ).sort((a: any, b: any) => a.totalMilliseconds - b.totalMilliseconds);
 
     const formatMilliseconds = (ms: number): string => {
         const totalSeconds = Math.floor(ms / 1000);
@@ -61,11 +64,18 @@ export default function Dashboard({ scores, races, cities, bestTimePerRace }: an
     }));
 
     const filteredRows = cityFilter === 'all' ? rows : rows.filter((item: any) => item.area === cityFilter);
+    const rankedRows = [...filteredRows].sort((a, b) => a.totalWaktuMs - b.totalWaktuMs);
 
     const cityOptions = useMemo(() => {
         const unique = Array.from(new Set(cities.map((c: any) => c.name)));
         return ['all', ...unique];
     }, [cities]);
+
+    // handle export
+    function handleExportScores() {
+        const city = cityFilter;
+        window.location.href = route('export.ranked') + `?city=${city}`;
+    }
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
@@ -84,12 +94,15 @@ export default function Dashboard({ scores, races, cities, bestTimePerRace }: an
                 </div>
 
                 {/* Best Time Cards */}
-                <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
                     {bestTimePerRace.map((item: any, index: number) => (
                         <div key={index} className="rounded-md bg-white p-4 shadow-md transition duration-200 hover:shadow-lg">
                             <h3 className="font-medium text-gray-800">Best Time - {item.raceName}</h3>
                             <p className="text-sm text-gray-600">
-                                No Pasukan: <span className="font-semibold text-gray-900">{item.member?.number_member ?? '-'}</span>
+                                No Pasukan:{' '}
+                                <span className="font-semibold text-gray-900">
+                                    {item.member?.number_member ?? '-'} - {item.city ?? '-'}
+                                </span>
                             </p>
                             <p className="text-sm text-gray-600">
                                 Total Waktu: <span className="font-semibold text-gray-900">{item.time ?? '-'}</span>
@@ -98,9 +111,19 @@ export default function Dashboard({ scores, races, cities, bestTimePerRace }: an
                     ))}
                 </div>
 
+                <div className="flex justify-end">
+                    <button
+                        onClick={handleExportScores}
+                        className="m-4 flex items-center gap-2 rounded bg-green-600 px-4 py-2 text-sm text-white hover:bg-green-700"
+                    >
+                        <Download size={16} /> {/* Bisa tambahkan size sesuai kebutuhan */}
+                        <span>Export Scores</span>
+                    </button>
+                </div>
+
                 {/* Table */}
                 <div className="relative min-h-[100vh] flex-1 overflow-hidden border-sidebar-border/70 md:min-h-min dark:border-sidebar-border">
-                    <div className="mt-6 overflow-x-auto rounded-md bg-white shadow-md">
+                    <div className="overflow-x-auto rounded-md bg-white shadow-md">
                         <table className="min-w-full table-auto text-sm">
                             <thead>
                                 <tr className="border-b bg-gray-100 text-sm">
@@ -118,62 +141,73 @@ export default function Dashboard({ scores, races, cities, bestTimePerRace }: an
                                     })}
                                     <th className="px-4 py-2 text-left">Total Waktu</th>
                                     <th className="px-4 py-2 text-left">PE Poin</th>
-                                    <th className="px-4 py-2 text-left">ACE Poin</th>
                                     <th className="px-4 py-2 text-left">D-Day Poin</th>
                                     <th className="px-4 py-2 text-left">Total Point</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                {filteredRows.map((item: any, idx: number) => (
-                                    <tr key={idx} className="border-b">
-                                        <td className="px-4 py-2">{item.area}</td>
-                                        <td className="px-4 py-2">{item.noPasukan}</td>
-                                        {races.map((race: any) => (
-                                            <td key={race.id} className="px-4 py-2">
-                                                {item.lombaTimes[race.code] || '-'}
-                                            </td>
-                                        ))}
-                                        <td className="px-4 py-2">{item.totalWaktu}</td>
+                                {rankedRows.map((item: any, idx: number) => {
+                                    let rowColor = '';
+                                    if (idx === 0)
+                                        rowColor = 'bg-[#FFD700]'; // Rank 1
+                                    else if (idx === 1)
+                                        rowColor = 'bg-[#C0C0C0]'; // Rank 2
+                                    else if (idx === 2)
+                                        rowColor = 'bg-[#CD7F32]'; // Rank 3
+                                    else if (idx === 3)
+                                        rowColor = 'bg-[#1E90FF]'; // Rank 4
+                                    else if (idx === 4) rowColor = 'bg-[#32CD32]'; // Rank 5
 
-                                        {/* PE, ACE, DDAY */}
-                                        {(['pePoin', 'acePoin', 'dDayPoin'] as const).map((field) => (
-                                            <td key={field} className="px-4 py-2">
-                                                <form
-                                                    onSubmit={(e) => {
-                                                        e.preventDefault();
-                                                        const valueInput = e.currentTarget.elements.namedItem('value') as HTMLInputElement;
-                                                        const value = parseInt(valueInput.value);
+                                    return (
+                                        <tr key={item.id} className={`border-b ${rowColor}`}>
+                                            <td className="px-4 py-2">{item.area}</td>
+                                            <td className="px-4 py-2">{item.noPasukan}</td>
+                                            {races.map((race: any) => (
+                                                <td key={race.id} className="px-4 py-2">
+                                                    {item.lombaTimes[race.code] || '-'}
+                                                </td>
+                                            ))}
+                                            <td className="px-4 py-2">{item.totalWaktu}</td>
 
-                                                        router.post(route('scores.add-point'), {
-                                                            member_id: item.id,
-                                                            field,
-                                                            value: isNaN(value) ? 0 : value,
-                                                        });
-                                                    }}
-                                                    className="flex items-center gap-1"
-                                                >
-                                                    <input
-                                                        name="value"
-                                                        type="number"
-                                                        className="w-16 rounded border border-gray-300 px-2 py-1 text-center text-sm shadow-sm focus:border-blue-400 focus:ring-1 focus:ring-blue-300 focus:outline-none"
-                                                        placeholder="0"
-                                                        defaultValue={item[field] > 0 ? item[field] : ''}
-                                                    />
-                                                    <button
-                                                        type="submit"
-                                                        className={`rounded px-2 py-1 text-xs font-semibold text-white shadow-sm ${
-                                                            item[field] > 0 ? 'bg-blue-500 hover:bg-blue-600' : 'bg-green-500 hover:bg-green-600'
-                                                        }`}
+                                            {(['pePoin', 'dDayPoin'] as const).map((field) => (
+                                                <td key={field} className="px-4 py-2">
+                                                    <form
+                                                        onSubmit={(e) => {
+                                                            e.preventDefault();
+                                                            const valueInput = e.currentTarget.elements.namedItem('value') as HTMLInputElement;
+                                                            const value = parseInt(valueInput.value);
+
+                                                            router.post(route('scores.add-point'), {
+                                                                member_id: item.id,
+                                                                field,
+                                                                value: isNaN(value) ? 0 : value,
+                                                            });
+                                                        }}
+                                                        className="flex items-center gap-1"
                                                     >
-                                                        {item[field] > 0 ? 'Update' : 'Add'}
-                                                    </button>
-                                                </form>
-                                            </td>
-                                        ))}
+                                                        <input
+                                                            name="value"
+                                                            type="number"
+                                                            className="w-16 rounded border border-gray-300 px-2 py-1 text-center text-sm shadow-sm focus:border-blue-400 focus:ring-1 focus:ring-blue-300 focus:outline-none"
+                                                            placeholder="0"
+                                                            defaultValue={item[field] > 0 ? item[field] : ''}
+                                                        />
+                                                        <button
+                                                            type="submit"
+                                                            className={`rounded px-2 py-1 text-xs font-semibold text-white shadow-sm ${
+                                                                item[field] > 0 ? 'bg-blue-700 hover:bg-blue-800' : 'bg-green-700 hover:bg-green-800'
+                                                            }`}
+                                                        >
+                                                            {item[field] > 0 ? 'Update' : 'Add'}
+                                                        </button>
+                                                    </form>
+                                                </td>
+                                            ))}
 
-                                        <td className="px-4 py-2">{item.totalPoin}</td>
-                                    </tr>
-                                ))}
+                                            <td className="px-4 py-2">{item.totalPoin}</td>
+                                        </tr>
+                                    );
+                                })}
                             </tbody>
                         </table>
                     </div>
