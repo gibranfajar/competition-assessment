@@ -60,7 +60,7 @@ export default function Dashboard({ scores, races, cities, bestTimePerRace }: an
     const rows = Object.values(grouped).map((item: any) => ({
         ...item,
         totalWaktu: formatMilliseconds(item.totalMilliseconds),
-        totalPoin: item.pePoin + item.acePoin + item.dDayPoin,
+        totalPoin: item.pePoin + item.dDayPoin,
     }));
 
     const filteredRows = cityFilter === 'all' ? rows : rows.filter((item: any) => item.area === cityFilter);
@@ -216,9 +216,18 @@ export default function Dashboard({ scores, races, cities, bestTimePerRace }: an
                                                                     onSuccess: () => {
                                                                         // Update state lokal supaya tombol langsung berubah
                                                                         setFilteredRowsTotal((prev: any[]) =>
-                                                                            prev.map((row) =>
-                                                                                row.id === item.id ? { ...row, [field]: value } : row,
-                                                                            ),
+                                                                            prev.map((row) => {
+                                                                                if (row.id === item.id) {
+                                                                                    const updatedRow = { ...row, [field]: value };
+
+                                                                                    // Hitung ulang totalPoin
+                                                                                    updatedRow.totalPoin =
+                                                                                        (updatedRow.pePoin || 0) + (updatedRow.dDayPoin || 0);
+
+                                                                                    return updatedRow;
+                                                                                }
+                                                                                return row;
+                                                                            }),
                                                                         );
                                                                     },
                                                                 },
