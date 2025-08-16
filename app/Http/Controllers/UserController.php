@@ -71,18 +71,22 @@ class UserController extends Controller
             // Filter skor hanya untuk race ini
             $filtered = $scores->filter(fn($score) => $score->race_id === $race->id);
 
-            // Urutkan berdasarkan waktu (dalam detik)
-            $bestScore = $filtered->sortBy(function ($score) {
-                return $this->convertTimeToSeconds($score->time);
-            })->first();
+            // Urutkan berdasarkan waktu (dalam detik) dan ambil 3 terbaik
+            $bestTimes = $filtered
+                ->sortBy(fn($score) => $this->convertTimeToSeconds($score->time))
+                ->take(3)
+                ->values(); // reset index
 
             return [
                 'raceName' => $race->name,
-                'time' => $bestScore?->time,
-                'member' => $bestScore?->member,
-                'city' => $bestScore?->member?->city?->name,
+                'bestTimes' => $bestTimes->map(fn($score) => [
+                    'number_member' => $score->member->number_member ?? '-',
+                    'time' => $score->time ?? '-',
+                    'city' => $score->member->city->name ?? '-',
+                ]),
             ];
         });
+
 
         return Inertia::render('dashboard', [
             'scores' => $scores,
@@ -176,20 +180,41 @@ class UserController extends Controller
             $grouped[$memberId]['scores'][$raceCode] = $time;
         }
 
+        // $bestTimePerRace = $races->map(function ($race) use ($scores) {
+        //     // Filter skor hanya untuk race ini
+        //     $filtered = $scores->filter(fn($score) => $score->race_id === $race->id);
+
+        //     // Urutkan berdasarkan waktu (dalam detik)
+        //     $bestScore = $filtered->sortBy(function ($score) {
+        //         return $this->convertTimeToSeconds($score->time);
+        //     })->first();
+
+        //     return [
+        //         'raceName' => $race->name,
+        //         'time' => $bestScore?->time,
+        //         'member' => $bestScore?->member,
+        //         'city' => $bestScore?->member?->city?->name,
+        //     ];
+        // });
+
+
         $bestTimePerRace = $races->map(function ($race) use ($scores) {
             // Filter skor hanya untuk race ini
             $filtered = $scores->filter(fn($score) => $score->race_id === $race->id);
 
-            // Urutkan berdasarkan waktu (dalam detik)
-            $bestScore = $filtered->sortBy(function ($score) {
-                return $this->convertTimeToSeconds($score->time);
-            })->first();
+            // Urutkan berdasarkan waktu (dalam detik) dan ambil 3 terbaik
+            $bestTimes = $filtered
+                ->sortBy(fn($score) => $this->convertTimeToSeconds($score->time))
+                ->take(3)
+                ->values(); // reset index
 
             return [
                 'raceName' => $race->name,
-                'time' => $bestScore?->time,
-                'member' => $bestScore?->member,
-                'city' => $bestScore?->member?->city?->name,
+                'bestTimes' => $bestTimes->map(fn($score) => [
+                    'number_member' => $score->member->number_member ?? '-',
+                    'time' => $score->time ?? '-',
+                    'city' => $score->member->city->name ?? '-',
+                ]),
             ];
         });
 

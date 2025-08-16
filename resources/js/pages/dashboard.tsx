@@ -100,6 +100,8 @@ export default function Dashboard({ scores, races, cities, bestTimePerRace }: an
         window.location.href = route('export.ranked') + `?city=${city}`;
     }
 
+    console.log('Best Time per Race:', bestTimePerRace);
+
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Dashboard" />
@@ -118,18 +120,17 @@ export default function Dashboard({ scores, races, cities, bestTimePerRace }: an
 
                 {/* Best Time Cards */}
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-                    {bestTimePerRace.map((item: any, index: number) => (
-                        <div key={index} className="rounded-md bg-white p-4 shadow-md transition duration-200 hover:shadow-lg">
-                            <h3 className="font-medium text-gray-800">Best Time - {item.raceName}</h3>
-                            <p className="text-sm text-gray-600">
-                                No Pasukan:{' '}
-                                <span className="font-semibold text-gray-900">
-                                    {item.member?.number_member ?? '-'} - {item.city ?? '-'}
-                                </span>
-                            </p>
-                            <p className="text-sm text-gray-600">
-                                Total Waktu: <span className="font-semibold text-gray-900">{item.time ?? '-'}</span>
-                            </p>
+                    {bestTimePerRace.map((race: any, index: number) => (
+                        <div key={index} className="mb-4 rounded-lg bg-white p-4 shadow transition-shadow duration-200 hover:shadow-lg">
+                            <h3 className="mb-3 border-b border-gray-200 pb-2 text-sm font-semibold text-gray-800">Best Time - {race.raceName}</h3>
+
+                            <div className="space-y-1 text-xs text-gray-700">
+                                {race.bestTimes.map((score: any, i: number) => (
+                                    <div className="px-1 py-0.5">
+                                        Juara {i + 1}: {score.number_member.padEnd(6, ' ')} - {score.city.padEnd(12, ' ')} - {score.time}
+                                    </div>
+                                ))}
+                            </div>
                         </div>
                     ))}
                 </div>

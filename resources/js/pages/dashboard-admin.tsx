@@ -88,15 +88,17 @@ export default function DashboardAdmin({ races, members, city, grouped, bestTime
 
                 {/* Best Time Cards */}
                 <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
-                    {bestTimePerRace.map((item, index) => (
-                        <div key={index} className="rounded-xl border-2 border-zinc-200 p-4 shadow-md transition duration-200 hover:shadow-lg">
-                            <h3 className="text-lg font-medium text-gray-800">Best Time - {item.raceName}</h3>
-                            <p className="text-sm text-gray-600">
-                                No Pasukan: <span className="font-semibold text-gray-900">{item.member?.number_member ?? '-'}</span>
-                            </p>
-                            <p className="text-sm text-gray-600">
-                                Total Waktu: <span className="rounded px-2 font-semibold">{item.time ?? '-'}</span>
-                            </p>
+                    {bestTimePerRace.map((race: any, index: number) => (
+                        <div key={index} className="mb-4 rounded-lg bg-white p-4 shadow transition-shadow duration-200 hover:shadow-lg">
+                            <h3 className="mb-3 border-b border-gray-200 pb-2 text-sm font-semibold text-gray-800">Best Time - {race.raceName}</h3>
+
+                            <div className="space-y-1 text-xs text-gray-700">
+                                {race.bestTimes.map((score: any, i: number) => (
+                                    <div className="px-1 py-0.5">
+                                        Juara {i + 1}: {score.number_member.padEnd(6, ' ')} - {score.time}
+                                    </div>
+                                ))}
+                            </div>
                         </div>
                     ))}
                 </div>
