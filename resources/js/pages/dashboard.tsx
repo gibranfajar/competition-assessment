@@ -205,11 +205,24 @@ export default function Dashboard({ scores, races, cities, bestTimePerRace }: an
                                                             const valueInput = e.currentTarget.elements.namedItem('value') as HTMLInputElement;
                                                             const value = parseInt(valueInput.value);
 
-                                                            router.post(route('scores.add-point'), {
-                                                                member_id: item.id,
-                                                                field,
-                                                                value: isNaN(value) ? 0 : value,
-                                                            });
+                                                            router.post(
+                                                                route('scores.add-point'),
+                                                                {
+                                                                    member_id: item.id,
+                                                                    field,
+                                                                    value: isNaN(value) ? 0 : value,
+                                                                },
+                                                                {
+                                                                    onSuccess: () => {
+                                                                        // Update state lokal supaya tombol langsung berubah
+                                                                        setFilteredRowsTotal((prev: any[]) =>
+                                                                            prev.map((row) =>
+                                                                                row.id === item.id ? { ...row, [field]: value } : row,
+                                                                            ),
+                                                                        );
+                                                                    },
+                                                                },
+                                                            );
                                                         }}
                                                         className="flex items-center gap-1"
                                                     >
